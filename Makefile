@@ -36,12 +36,15 @@ DEPENDS_C = $(patsubst ./src/%.c, ./build/%.d, $(SOURCES_C))
 # a differenza dei file C, perche' e' unico e ha un ruolo speciale:
 # deve essere il primo codice eseguito dal kernel.
 OBJECT_ENTRY_ASM = ./build/kernel.asm.o
+OBJECT_PRIVILEGE_ASM = ./build/cambio_di_privilegio.asm.o
+OBJECT_SYSCALL_ASM = ./build/syscall.asm.o
+
 
 # Oggetto finale, risultato dell'unione di tutti gli oggetti sopra.
 OBJECT_KERNEL_COMPLETE = ./build/completeKernel.o
 
 # Opzioni di compilazione del C.
-#   -g               informazioni di debug
+#   -g               informazioni di debug	
 #   -ffreestanding   nessuna assunzione sulla presenza di un sistema
 #                    operativo sotto (niente libc implicita)
 #   -nostdlib        non collegare le librerie standard C
@@ -51,7 +54,7 @@ OBJECT_KERNEL_COMPLETE = ./build/completeKernel.o
 #   -Wall            mostra tutti gli avvisi del compilatore
 #   -O0              nessuna ottimizzazione, piu' semplice da debuggare
 #   -Iinc            cerca gli header anche dentro ./inc
-COMPILER_FLAGS = -g -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Iinc -mgeneral-regs-only
+COMPILER_FLAGS = -g -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Iinc -mgeneral-regs-only -msoft-float
 
 # Regola predefinita: quella eseguita da "make" o "make all" senza
 # argomenti.
@@ -83,11 +86,18 @@ all: ./bin/os.bin
 $(OBJECT_ENTRY_ASM): ./src/kernel.asm | ./build
 	nasm -f elf -g ./src/kernel.asm -o $(OBJECT_ENTRY_ASM)
 
+$(OBJECT_PRIVILEGE_ASM): ./src/cambio_di_privilegio.asm | ./build
+	nasm -f elf -g ./src/cambio_di_privilegio.asm -o $(OBJECT_PRIVILEGE_ASM)
+$(OBJECT_SYSCALL_ASM): ./src/syscall.asm | ./build
+	nasm -f elf -g ./src/syscall.asm -o $(OBJECT_SYSCALL_ASM)
+
+
 # Unisce il punto di ingresso in assembly con TUTTI gli oggetti C in
 # un unico oggetto rilocabile. $(OBJECTS_C) contiene sempre l'elenco
 # aggiornato, calcolato da $(wildcard ...) in cima al file.
-$(OBJECT_KERNEL_COMPLETE): $(OBJECT_ENTRY_ASM) $(OBJECTS_C)
-	i686-elf-ld -g -relocatable $(OBJECT_ENTRY_ASM) $(OBJECTS_C) -o $(OBJECT_KERNEL_COMPLETE)
+$(OBJECT_KERNEL_COMPLETE): $(OBJECT_ENTRY_ASM) $(OBJECT_PRIVILEGE_ASM) $(OBJECT_SYSCALL_ASM) $(OBJECTS_C)
+	i686-elf-ld -g -relocatable $(OBJECT_ENTRY_ASM) $(OBJECT_PRIVILEGE_ASM) $(OBJECT_SYSCALL_ASM) $(OBJECTS_C) -o $(OBJECT_KERNEL_COMPLETE)
+
 
 # Produce il binario finale del kernel, usando lo script del linker
 # per decidere indirizzi e ordine delle sezioni in memoria.
