@@ -4,6 +4,7 @@
 #include "idt.h"
 #include "shell.h"
 #include "loc.h"
+#include "gdt.h"
 #include "mem.h"
 #include "mappa_memoria.h"
 #include "stdf.h"
@@ -30,40 +31,21 @@ int kernel_main(int exit_call) <%
         return exit_code;
     }
     clear_screen(' ');
+    
+    void *stack_kernel_per_ring3 = alloc(4096);
+    tss_imposta_stack_kernel((unsigned int) stack_kernel_per_ring3 + 4096);
 
     idt_inizializza();
     temporizzatore_inizializza();
     mappa_memoria_inizializza();
-    begin_fegh(30);
-
-    waaait(200);
+    gdt_inizializza();
 
     present();
 
     stampa_regioni_utilizzabili();
-
-    print('\n');
-    
-
-    unsigned char *idx;
-    idx = alloc(8);
-
-    fprint("%p\n%p\n%p\n%p\n\n",idx,&idx[1],&idx[2],&idx[3]);
-
-
-    int ix = initialize_variable(tru, main_scope, fal, auto, 
-        auto, 28, tru, 59);
-
-
-    void *pt = memory + ix;
-    
-    fprint("%d\n",get_value_of_variable(ix));
-
-    stampa_dump_memoria(memory,8);
-
     shell_inizializza();
-
-
+    
+    
     while(1) {
         shell_ciclo_principale();
         __asm__ volatile ("hlt");

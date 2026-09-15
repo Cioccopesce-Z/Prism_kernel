@@ -363,7 +363,6 @@ size_t initialize_variable(int use_scope, size_t scope_address,                 
     }
     else{
         size_t method_lenght = resolve_method_lenght(existing_method_lenght, method_address);
-        fprint("%d  <- return of resolve method lenght\n",method_lenght);
         if(method_lenght == 0){stampa_stringa("uscita3\n"); return start;} // errore gia' stampato
 
 
@@ -377,7 +376,6 @@ size_t initialize_variable(int use_scope, size_t scope_address,                 
     for(size_t i = 0; i < byte_for_dim; i++){
         memory[start + byte_for_scope + i] = (__uint8_t)(record_end >> (8 * i));
     }
-    stampa_stringa("OK\n");
     return start;
 }
 

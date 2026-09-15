@@ -1,6 +1,8 @@
 // file: src/shell.c
 #include "shell.h"
 #include "stdf.h"
+#include "gdt.h"
+#include "type_conv.h"
 
 static char buffer_riga[LUNGHEZZA_MASSIMA_COMANDO];
 
@@ -32,6 +34,8 @@ static void echo(char *stringa);
 static void nano(char *nome_file);
 static char *estrai_nome_comando(char *riga, char **argomenti);
 static int nomi_uguali(const char *a, const char *b);
+static void wrapper_regione_utilizzabile(char *place);
+static void exec_run(char *starting_idx_of_program);
 
 // Tabella dei comandi disponibili. Aggiungere un comando nuovo vuol
 // dire: scrivere la funzione che lo esegue, aggiungere una riga qui.
@@ -40,15 +44,27 @@ static const struct voce_comando tabella_comandi[] = {
     { "help",  comando_aiuto,           "elenca i comandi disponibili" },
     { "clear", comando_pulisci_schermo, "pulisce lo schermo" },
     { "echo", echo, "stampa a schermo la stringa successiva al comando"},
-    { "nano", nano, "crea un file con il contenuto scritto e crea una variabile puntatore al nome dopo nano"},
+    { "nano", nano, "crea un file e crea una variabile puntatore al nome dopo nano"},
+    { "freemem", wrapper_regione_utilizzabile,"stampa le regioni disponibili di memoria con idx iniziale e dim"},
+    { "run", exec_run,"execute the program at index in hex after the run command"}
 };
 
 #define NUMERO_COMANDI (sizeof(tabella_comandi) / sizeof(tabella_comandi[0]))
 
+static void exec_run(char *starting_idx_of_program)
+{
+    fprint("\nstarting program at address %x\n",hex_str_to_n(starting_idx_of_program));
+    salta_a_programma_in_ring_3_a_indirizzo(hex_str_to_n(starting_idx_of_program));
+}
+
+static void wrapper_regione_utilizzabile(char *place)
+{
+    stampa_regioni_utilizzabili();
+}
 
 static void stampa_prompt(void)
 {
-    stampa_stringa("prism> ");
+    stampa_stringa("prism:#-()> ");
 }
 
 static void nano(char *nome_file)

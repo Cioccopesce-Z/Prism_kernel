@@ -120,7 +120,7 @@ void prism_screen(void){
     );
 
     print_at_color(
-        "                         PRISM OS v0.0.3",
+        "                         PRISM OS v0.0.4",
         24, 0, VGA_LIGHT_GRAY
     );
 }

@@ -3,5 +3,4 @@
 
 void prism_screen(void);
 
-
 #endif
